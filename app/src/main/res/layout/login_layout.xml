@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="listener"
+            type="com.cartrack.userlocation.databinding.ClickListener" />
+
+        <variable
+            name="viewmodel"
+            type="com.cartrack.userlocation.viewmodel.LoginViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/login_outer_layout_margin_start"
+        android:layout_marginEnd="@dimen/login_outer_layout_margin_start"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:id="@+id/progressbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:indeterminateTint="@color/black" />
+
+        <EditText
+            android:id="@+id/txtUserName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/username_txt_hint"
+            android:maxLength="20"
+            android:minHeight="48dp"
+            android:textColorHint="@color/text_color_hint"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/txtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/login_text_view_margin_top"
+            android:ems="10"
+            android:hint="@string/password_txt_hint"
+            android:inputType="textPassword"
+            android:minHeight="48dp"
+            android:textColorHint="@color/text_color_hint"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@+id/txtUserName" />
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/login_text_view_margin_top" />
+
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/login_text_view_margin_top"
+            android:background="@drawable/ripple_on_black_button"
+            android:onClick="@{(v) -> listener.onClick(v)}"
+            android:text="@string/login_btn"
+            android:textSize="@dimen/button_text_size"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@+id/txtPassword" />
+
+        <TextView
+            android:id="@+id/txtValidateHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/password_constraint_hint_margin_top"
+            android:text="@string/password_validation_text"
+            android:visibility="gone" />
+
+        <CheckBox
+            android:id="@+id/remember_me_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/remember_me"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</layout>

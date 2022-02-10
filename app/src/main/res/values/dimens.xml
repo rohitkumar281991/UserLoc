@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="button_text_size">18sp</dimen>
+    <dimen name="login_outer_layout_margin_start">50dp</dimen>
+    <dimen name="login_text_view_margin_top">24dp</dimen>
+    <dimen name="password_constraint_hint_margin_top">10dp</dimen>
+    <dimen name="spinner_item_padding_top">15dp</dimen>
+    <dimen name="cardview_outer_layout_padding_horiz">20dp</dimen>
+    <dimen name="cardview_outer_layout_padding_vert">15dp</dimen>
+    <dimen name="cardview_outer_layout_padding">5dp</dimen>
+    <dimen name="ten_dp">10dp</dimen>
+    <dimen name="five_dp">5dp</dimen>
+    <dimen name="twelve_dp">12dp</dimen>
+    <dimen name="eighteen_sp">18sp</dimen>
+    <dimen name="four_dp">4dp</dimen>
+</resources>

@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">UserLoc</string>
+    <string name="username_txt_hint">UserName</string>
+    <string name="password_txt_hint">Password</string>
+    <string name="login_btn">Login</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="password_validation_text">Password minimum length 7 \nUppercase \nNumber \nSpecial character</string>
+    <string name="username_validation_text">UserName minimum length 7 \nNo special character</string>
+
+    <string name="selected_item">Selected item:</string>
+    <string name="first_text">Name:</string>
+    <string name="second_text">second_text</string>
+    <string name="third_text">third_text</string>
+    <string name="logout_menu">Logout</string>
+    <string name="google_maps_key">AIzaSyBbZ6ILJUdjI8h0z0hYPnaAilUpmBKQnyQ</string>
+    <string name="provider_failed">Provider failed</string>
+    <string name="current_location">Current Location</string>
+
+    <string-array name="Countries">
+        <item>Singapore</item>
+        <item>India</item>
+        <item>Japan</item>
+        <item>England</item>
+        <item>Russia</item>
+        <item>SriLanka</item>
+    </string-array>
+
+</resources>
