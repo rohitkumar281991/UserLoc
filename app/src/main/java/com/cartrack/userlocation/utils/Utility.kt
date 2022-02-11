@@ -1,6 +1,5 @@
 package com.cartrack.userlocation.utils
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.location.LocationManager
@@ -11,7 +10,6 @@ import android.view.inputmethod.InputMethodManager
 import com.cartrack.userlocation.Constants
 import com.cartrack.userlocation.data.api.model.UserInfoRepositoryList
 import com.cartrack.userlocation.databinding.LoginLayoutBinding
-import com.cartrack.userlocation.ui.UserLocationFragment
 import java.util.regex.Pattern
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
@@ -26,36 +24,6 @@ object Utility {
     const val iv = "bVQzNFNhRkQ1Njc4UUFaWA==" // base64 decode => mT34SaFD5678QAZX
 
     private const val TAG = "DataCheck"
-
-    fun validation(binding: LoginLayoutBinding?): Constants.UserValidation {
-        val result: Constants.UserValidation =
-            if (binding!!.txtUserName.text.isNullOrEmpty() || binding.txtUserName.text.isValidUserName()) {
-                Constants.UserValidation.INVALID_USERNAME
-            } else if (binding.txtPassword.text.isNullOrEmpty() || binding.txtPassword.text.isValidPassword()) {
-                Constants.UserValidation.INVALID_PASSWORD
-            } else {
-                Constants.UserValidation.SUCCESS
-            }
-        return result
-    }
-
-
-    fun CharSequence.isValidPassword(): Boolean {
-        val passwordPattern =
-            "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~\$^+=<>]).{7,20}\$"
-        val pattern = Pattern.compile(passwordPattern)
-        val matcher = pattern.matcher(this)
-        return matcher.matches()
-    }
-
-    fun CharSequence.isValidUserName(): Boolean {
-        val userNamePattern =
-            "^[A-Za-z]\\\\w{7,29}\$"
-        val pattern = Pattern.compile(userNamePattern)
-        val matcher = pattern.matcher(this)
-        Log.d("rohit ","user "+this +":: "+ pattern)
-        return matcher.matches()
-    }
 
     fun hideKeyboard(activity: Activity) {
         val imm: InputMethodManager =

@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cartrack.userlocation.Constants
 import com.cartrack.userlocation.SessionManagerUtil
+import com.cartrack.userlocation.Validator
 import com.cartrack.userlocation.data.Resource
 import com.cartrack.userlocation.data.api.RetroRepository
 import com.cartrack.userlocation.data.api.model.UserInfoRepositoryList
@@ -174,8 +175,12 @@ class LoginViewModel @Inject constructor(
         job?.cancel()
     }
 
-    fun validateUserInput(binding: LoginLayoutBinding): Constants.UserValidation {
-        return Utility.validation(binding)
+    fun validateUser(value: String): String {
+        return Validator.isValidName(value)
+    }
+
+    fun validatePass(value: String): String {
+        return Validator.isValidPassword(value)
     }
 
     fun hideKeyboard(activity: Activity) {

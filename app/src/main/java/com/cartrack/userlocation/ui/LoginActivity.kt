@@ -10,7 +10,6 @@ import android.widget.ArrayAdapter
 import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import com.cartrack.userlocation.Constants
 import com.cartrack.userlocation.R
 import com.cartrack.userlocation.SessionManagerUtil
 import com.cartrack.userlocation.Status
@@ -89,7 +88,10 @@ class LoginActivity : BaseActivity(), ClickListener {
         viewModel.isCountryListPresent.observe(this, Observer {
             when (it) {
                 false -> {
-                    DialogManager.showErrorDialog(this, "Connect to network and restart app to sync data")
+                    DialogManager.showErrorDialog(
+                        this,
+                        "Connect to network and restart app to sync data"
+                    )
                 }
             }
         })
@@ -142,43 +144,52 @@ class LoginActivity : BaseActivity(), ClickListener {
             DialogManager.showErrorDialog(this, Status.ERROR_NO_NETWORK)
         } else {
             viewModel.hideKeyboard(this)
-            if (viewModel.validateUserInput(binding) == Constants.UserValidation.SUCCESS) {
 
-                val user = UserInfoRepositoryList(
-                    name = binding.txtUserName.text.toString(),
-                    password = Utility.encryptionFunction(binding.txtPassword.text.toString()),
-                    address = UserDetailsAddress(
-                        city = selectedCountry
+            if (viewModel.validateUser(binding.txtUserName.text.toString()) == "true") {
+                if (viewModel.validatePass(binding.txtPassword.text.toString()) == "true") {
+                    val user = UserInfoRepositoryList(
+                        name = binding.txtUserName.text.toString(),
+                        password = Utility.encryptionFunction(binding.txtPassword.text.toString()),
+                        address = UserDetailsAddress(
+                            city = selectedCountry
+                        )
                     )
-                )
-                viewModel.insertSingleUserData(user)
-                viewModel.insertUserDataStatus.observe(this, Observer {
-                    when (it.status) {
-                        ResourceStatus.SUCCESS -> {
-                            viewModel.startUserSession(this, binding)
-                            binding.txtValidateHint.visibility = View.GONE
-                            launchUserDetailActivity()
+                    viewModel.insertSingleUserData(user)
+                    viewModel.insertUserDataStatus.observe(this, Observer {
+                        when (it.status) {
+                            ResourceStatus.SUCCESS -> {
+                                viewModel.startUserSession(this, binding)
+                                binding.txtValidateHint.visibility = View.GONE
+                                launchUserDetailActivity()
+                            }
+                            ResourceStatus.ERROR -> {
+                                binding.txtValidateHint.visibility = View.GONE
+                                Log.e(TAG, "it.message = ${it.error}")
+                                Snackbar.make(
+                                    binding.root,
+                                    it.error.toString(),
+                                    Snackbar.LENGTH_LONG
+                                ).show()
+                            }
                         }
-                        ResourceStatus.ERROR -> {
-                            binding.txtValidateHint.visibility = View.GONE
-                            Log.e(TAG, "it.message = ${it.error}")
-                            Snackbar.make(
-                                binding.root,
-                                it.error.toString(),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
+                    })
+                } else {
+                    if (binding.txtValidateHint.visibility == View.VISIBLE) {
+                        binding.txtValidateHint.visibility = View.GONE
                     }
-                })
+                    binding.txtValidateHint.text =
+                        viewModel.validatePass(binding.txtPassword.text.toString())
+
+                    binding.txtValidateHint.visibility = View.VISIBLE
+                }
             } else {
                 if (binding.txtValidateHint.visibility == View.VISIBLE) {
                     binding.txtValidateHint.visibility = View.GONE
                 }
-                if (viewModel.validateUserInput(binding) == Constants.UserValidation.INVALID_USERNAME) {
-                    binding.txtValidateHint.text = getString(R.string.username_validation_text)
-                } else {
-                    binding.txtValidateHint.text = getString(R.string.password_validation_text)
-                }
+
+                binding.txtValidateHint.text =
+                    viewModel.validateUser(binding.txtUserName.text.toString())
+
                 binding.txtValidateHint.visibility = View.VISIBLE
             }
         }
