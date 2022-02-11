@@ -7,14 +7,13 @@ import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.cartrack.userlocation.Constants
 import com.cartrack.userlocation.R
 import com.cartrack.userlocation.SessionManagerUtil
+import com.cartrack.userlocation.Status
 import com.cartrack.userlocation.data.ResourceStatus
 import com.cartrack.userlocation.data.api.model.UserDetailsAddress
 import com.cartrack.userlocation.data.api.model.UserInfoRepositoryList
@@ -45,7 +44,7 @@ class LoginActivity : BaseActivity(), ClickListener {
 
     private lateinit var binding: LoginLayoutBinding
     private val viewModel: LoginViewModel by viewModels()
-    private var selectedCountry : String? = null
+    private var selectedCountry: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,26 +55,46 @@ class LoginActivity : BaseActivity(), ClickListener {
         textViewClickListeners()
         fetchAllUsers()
 
-        viewModel.loading.observe(this, Observer {
-            if (it) {
-                binding.progressbar.visibility = View.VISIBLE
-            } else {
-                binding.progressbar.visibility = View.GONE
-            }
-        })
-
         viewModel.usersListFromServer.observe(this, Observer {
             if (it != null) {
-                populateCountries(Utility.getCountries(it))
+                when (it.status) {
+                    ResourceStatus.LOADING -> {
+                        Log.d(TAG, "loading")
+                        binding.progressbar.visibility = View.VISIBLE
+                    }
+                    ResourceStatus.SUCCESS -> {
+                        binding.progressbar.visibility = View.GONE
+                        Log.d(TAG, "success")
+                        if (it.data != null) {
+                            populateCountries(Utility.getCountries(it.data))
+                        }
+                    }
+                    ResourceStatus.ERROR -> {
+                        Log.d(TAG, "Error in activity " + it.error?.name)
+                        binding.progressbar.visibility = View.GONE
+                        when (it.error) {
+                            LoginViewModel.Errors.NETWORK_ERROR -> {
+                                DialogManager.showErrorDialog(this, Status.ERROR_NO_NETWORK)
+                            }
+                            else ->
+                                DialogManager.showErrorDialog(this, Status.ERROR)
+
+                        }
+                    }
+                }
+
             }
         })
 
-        viewModel.errorMessage.observe(this) {
-
-            Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
-        }
-
+        viewModel.isCountryListPresent.observe(this, Observer {
+            when (it) {
+                false -> {
+                    DialogManager.showErrorDialog(this, "Connect to network and restart app to sync data")
+                }
+            }
+        })
     }
+
 
     private fun fetchAllUsers() {
         viewModel.getAllUsersFromServerUsingCall()
@@ -98,6 +117,7 @@ class LoginActivity : BaseActivity(), ClickListener {
             }
         }
     }
+
     private fun populateCountries(list: List<String>) {
         val adapter = ArrayAdapter(this, R.layout.spinner_item, list)
         binding.spinner.adapter = adapter
@@ -116,50 +136,51 @@ class LoginActivity : BaseActivity(), ClickListener {
             }
         }
     }
-    override fun onClick(view: View?) {
-        Log.d(
-            TAG, "onClick $selectedCountry" + ":" + binding.txtUserName.text.toString() +
-                    ":+" + binding.txtPassword.text.toString()
-        )
-        viewModel.hideKeyboard(this)
-        if (viewModel.validateUserInput(binding) == Constants.UserValidation.SUCCESS) {
 
-            val user = UserInfoRepositoryList(
-                name = binding.txtUserName.text.toString(),
-                password = Utility.encryptionFunction(binding.txtPassword.text.toString()),
-                address = UserDetailsAddress(
-                    city = selectedCountry
-                )
-            )
-            viewModel.insertSingleUserData(user)
-            viewModel.insertUserDataStatus.observe(this, Observer {
-                when (it.status) {
-                    ResourceStatus.SUCCESS -> {
-                        viewModel.startUserSession(this, binding)
-                        binding.txtValidateHint.visibility = View.GONE
-                        launchUserDetailActivity()
-                    }
-                    ResourceStatus.ERROR -> {
-                        binding.txtValidateHint.visibility = View.GONE
-                        Log.e(TAG, "it.message = ${it.error}")
-                        Snackbar.make(
-                            binding.root,
-                            it.error.toString(),
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            })
+    override fun onClick(view: View?) {
+        if (!viewModel.isNetworkConnected()) {
+            DialogManager.showErrorDialog(this, Status.ERROR_NO_NETWORK)
         } else {
-            if (binding.txtValidateHint.visibility == View.VISIBLE) {
-                binding.txtValidateHint.visibility = View.GONE
-            }
-            if (viewModel.validateUserInput(binding) == Constants.UserValidation.INVALID_USERNAME) {
-                binding.txtValidateHint.text = getString(R.string.username_validation_text)
+            viewModel.hideKeyboard(this)
+            if (viewModel.validateUserInput(binding) == Constants.UserValidation.SUCCESS) {
+
+                val user = UserInfoRepositoryList(
+                    name = binding.txtUserName.text.toString(),
+                    password = Utility.encryptionFunction(binding.txtPassword.text.toString()),
+                    address = UserDetailsAddress(
+                        city = selectedCountry
+                    )
+                )
+                viewModel.insertSingleUserData(user)
+                viewModel.insertUserDataStatus.observe(this, Observer {
+                    when (it.status) {
+                        ResourceStatus.SUCCESS -> {
+                            viewModel.startUserSession(this, binding)
+                            binding.txtValidateHint.visibility = View.GONE
+                            launchUserDetailActivity()
+                        }
+                        ResourceStatus.ERROR -> {
+                            binding.txtValidateHint.visibility = View.GONE
+                            Log.e(TAG, "it.message = ${it.error}")
+                            Snackbar.make(
+                                binding.root,
+                                it.error.toString(),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                })
             } else {
-                binding.txtValidateHint.text = getString(R.string.password_validation_text)
+                if (binding.txtValidateHint.visibility == View.VISIBLE) {
+                    binding.txtValidateHint.visibility = View.GONE
+                }
+                if (viewModel.validateUserInput(binding) == Constants.UserValidation.INVALID_USERNAME) {
+                    binding.txtValidateHint.text = getString(R.string.username_validation_text)
+                } else {
+                    binding.txtValidateHint.text = getString(R.string.password_validation_text)
+                }
+                binding.txtValidateHint.visibility = View.VISIBLE
             }
-            binding.txtValidateHint.visibility = View.VISIBLE
         }
     }
 

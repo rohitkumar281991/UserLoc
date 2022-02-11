@@ -4,7 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.widget.CheckBox
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.cartrack.userlocation.Constants
 import com.cartrack.userlocation.SessionManagerUtil
 import com.cartrack.userlocation.data.Resource
@@ -12,21 +15,31 @@ import com.cartrack.userlocation.data.api.RetroRepository
 import com.cartrack.userlocation.data.api.model.UserInfoRepositoryList
 import com.cartrack.userlocation.databinding.LoginLayoutBinding
 import com.cartrack.userlocation.utils.Utility
+import com.cartrack.userlocation.workers.NetworkConnectionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.IOException
+import java.net.UnknownHostException
 import java.security.InvalidParameterException
 import java.util.concurrent.ExecutionException
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
+class LoginViewModel @Inject constructor(
+    var retroRepository: RetroRepository,
+    private val networkConnectionChecker: NetworkConnectionChecker
+) :
     ViewModel() {
     companion object {
         private const val TAG = "Ro_LoginViewModel"
     }
+
+    var jobApiCall: Job? = null
+    val usersListFromServer = MutableLiveData<Resource<List<UserInfoRepositoryList>, Errors>>()
+    val isCountryListPresent = MutableLiveData<Boolean>()
 
     private val _res = MutableLiveData<Resource<Unit, String>>()
     val res: LiveData<Resource<Unit, String>> = _res
@@ -36,34 +49,7 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
     val insertUserDataStatus: LiveData<Resource<Unit, String>> = _insertUserDataStatus
     private var job: Job? = null
 
-    //    fun insertUserData(users: Users) {
-//        if (job != null) {
-//            job?.cancel()
-//        }
-//        val exceptionHandler = CoroutineExceptionHandler { _, e ->
-//            when (e) {
-//                is InvalidParameterException -> {
-//                    _insertUsersDataStatus.postValue(Resource.error("invalid params"))
-//                }
-//                is ExecutionException -> {
-//                    Log.e(TAG, "Execution exception ${e.message}")
-//                }
-//                else -> {
-//                    Log.e(TAG, "Unknown exception ${e.message}")
-//                }
-//            }
-//        }
-//        job = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-//            Log.d(TAG, "insert into db")
-//            _insertUsersDataStatus.postValue(Resource.loading(null))
-//            try {
-//                val data = localUserRepositoryInterface.addUser(users)
-//                _insertUsersDataStatus.postValue(Resource.success(data))
-//            } catch (exception: Exception) {
-//                _insertUsersDataStatus.postValue(Resource.error(exception.message!!, null))
-//            }
-//        }
-//    }
+
     fun insertSingleUserData(user: UserInfoRepositoryList) {
         if (job != null) {
             job?.cancel()
@@ -125,7 +111,7 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
     }
 
     /**
-     * Data coming from server call
+     * Data coming from server call, not in use
      */
     fun makeApiCall() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -133,30 +119,13 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
         }
     }
 
-    var jobApiCall: Job? = null
-    val usersListFromServer = MutableLiveData<List<UserInfoRepositoryList>>()
-    val loading = MutableLiveData<Boolean>()
-    val errorMessage = MutableLiveData<Throwable>()
+    enum class Errors {
+        UNKNOWN, NETWORK_ERROR
+    }
 
     /**
      * Data coming from server call
      */
-    fun getAllUsersFromServerUsingResponse() {
-        val exceptionHandler = CoroutineExceptionHandler { _, e ->
-            onError(e)
-        }
-        jobApiCall = CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-            val response = retroRepository.getAllUsersDataUsingResponse()
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-//                    usersListFromServer.postValue(response.body())
-                    loading.value = false
-                    insertUserDetails(response)
-                }
-            }
-        }
-    }
-
     fun getAllUsersFromServerUsingCall() {
         val call: Call<List<UserInfoRepositoryList>> = retroRepository.getAllUsersDataUsingCall()
         call.enqueue(object : Callback<List<UserInfoRepositoryList>> {
@@ -165,19 +134,30 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
                 response: Response<List<UserInfoRepositoryList>>
             ) {
                 if (response.isSuccessful) {
-                    usersListFromServer.postValue(response.body())
-                    loading.value = false
+                    usersListFromServer.postValue(Resource.success(response.body()))
+                    isCountryListPresent.postValue(true)
                     insertUserDetails(response)
                 }
             }
 
             override fun onFailure(call: Call<List<UserInfoRepositoryList>>, t: Throwable) {
-                onError(t)
+
+                when {
+                    t is IOException || t is UnknownHostException || t is Exception -> {
+                        Log.d(TAG, "going to network error part")
+                        isCountryListPresent.postValue(false)
+                        usersListFromServer.postValue(Resource.error(Errors.NETWORK_ERROR, null))
+                    }
+                    else -> {
+                        Log.d(TAG, "going to unknown error part")
+                        isCountryListPresent.postValue(false)
+                        usersListFromServer.postValue(Resource.error(Errors.UNKNOWN, null))
+                    }
+                }
             }
 
         })
     }
-
 
     fun insertUserDetails(
         response: Response<List<UserInfoRepositoryList>>
@@ -187,11 +167,6 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
                 retroRepository.insertRecord(it)
             }
         }
-    }
-
-    private fun onError(message: Throwable) {
-        errorMessage.postValue(message)
-        loading.postValue(false)
     }
 
     override fun onCleared() {
@@ -215,5 +190,9 @@ class LoginViewModel @Inject constructor(var retroRepository: RetroRepository) :
         if (rememberMe(binding.rememberMeCheckbox)) {
             SessionManagerUtil.startUserSession(context)
         }
+    }
+
+    fun isNetworkConnected(): Boolean {
+        return networkConnectionChecker.isConnected()
     }
 }

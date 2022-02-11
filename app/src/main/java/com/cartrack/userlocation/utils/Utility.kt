@@ -29,9 +29,9 @@ object Utility {
 
     fun validation(binding: LoginLayoutBinding?): Constants.UserValidation {
         val result: Constants.UserValidation =
-            if (binding!!.txtUserName.text.isNullOrEmpty() || !binding.txtUserName.text.isValidUserName()) {
-                Constants.UserValidation.INVALID_USERNAME //todo: remove NOT from above line and below line
-            } else if (binding.txtPassword.text.isNullOrEmpty() || !binding.txtPassword.text.isValidPassword()) {
+            if (binding!!.txtUserName.text.isNullOrEmpty() || binding.txtUserName.text.isValidUserName()) {
+                Constants.UserValidation.INVALID_USERNAME
+            } else if (binding.txtPassword.text.isNullOrEmpty() || binding.txtPassword.text.isValidPassword()) {
                 Constants.UserValidation.INVALID_PASSWORD
             } else {
                 Constants.UserValidation.SUCCESS
@@ -45,18 +45,16 @@ object Utility {
             "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~\$^+=<>]).{7,20}\$"
         val pattern = Pattern.compile(passwordPattern)
         val matcher = pattern.matcher(this)
-//        return matcher.matches()
-        return true //todo : uncomment above check
+        return matcher.matches()
     }
 
     fun CharSequence.isValidUserName(): Boolean {
-        val passwordPattern =
+        val userNamePattern =
             "^[A-Za-z]\\\\w{7,29}\$"
-        val pattern = Pattern.compile(passwordPattern)
+        val pattern = Pattern.compile(userNamePattern)
         val matcher = pattern.matcher(this)
-//        return matcher.matches()
-        return true
-        //todo : uncomment above check
+        Log.d("rohit ","user "+this +":: "+ pattern)
+        return matcher.matches()
     }
 
     fun hideKeyboard(activity: Activity) {

@@ -15,6 +15,12 @@
     <string name="google_maps_key">AIzaSyBbZ6ILJUdjI8h0z0hYPnaAilUpmBKQnyQ</string>
     <string name="provider_failed">Provider failed</string>
     <string name="current_location">Current Location</string>
+    <string name="error_unknown">An unkown error occured. Retry after sometime</string>
+    <string name="mobile_date_off">Mobile data turned off</string>
+    <string name="connect_to_wifi">Connect to Wifi or mobile data network</string>
+    <string name="something_went_wrong">Something went wrong while connecting to server</string>
+    <string name="cannot_connect">Couldn\'t connect</string>
+    <string name="ok">ok</string>
 
     <string-array name="Countries">
         <item>Singapore</item>

@@ -10,7 +10,7 @@ data class Resource<T, E>(val status: ResourceStatus, val data: T?, val error: E
             return Resource(ResourceStatus.SUCCESS, data, null)
         }
 
-        fun <T, E> error(error: E?, data: T? = null): Resource<T, E> {
+        fun <T, E> error(error: E, data: T? = null): Resource<T, E> {
             return Resource(ResourceStatus.ERROR, data, error)
         }
     }
