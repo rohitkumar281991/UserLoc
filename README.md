@@ -1,17 +1,6 @@
 # UserLoc
 This uses a API call using Retrofit to obtain list of users details and show on UI in recycler view and google map.
 
-1. Candidate name: 
-		
-		Rohit Kumar , rohitkumar281991@gmail.com , +91-7337687243
-3. Interview panel:
-			
-			
-		1. Pedro Ventura
-		2. Jose Antunes
-		3. Gary Kumar
-                 
-Below are the screens developed for Loign, User list and User location on map.
 
 Login:
 
